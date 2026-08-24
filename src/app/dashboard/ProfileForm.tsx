@@ -14,6 +14,11 @@ import type {
 
 const initialState: SaveState = { error: null, success: false };
 
+interface SkillGroupDraft {
+  category: string;
+  items: string; // comma-separated while editing
+}
+
 function Field({
   label,
   children,
@@ -67,6 +72,15 @@ export default function ProfileForm({
   const [photoPreview, setPhotoPreview] = useState<string | null>(
     profile?.photo_url ?? null
   );
+  const [existingPhotoUrl, setExistingPhotoUrl] = useState(
+    profile?.photo_url ?? ""
+  );
+  const [resumeName, setResumeName] = useState<string | null>(
+    profile?.resume_url ? "Current resume on file" : null
+  );
+  const [existingResumeUrl, setExistingResumeUrl] = useState(
+    profile?.resume_url ?? ""
+  );
   const [experience, setExperience] = useState<ExperienceItem[]>(
     profile?.experience ?? []
   );
@@ -79,17 +93,54 @@ export default function ProfileForm({
   const [certificates, setCertificates] = useState<CertificateItem[]>(
     profile?.certificates ?? []
   );
+  const [certImagePreviews, setCertImagePreviews] = useState<
+    Record<number, string>
+  >({});
+  const [skillGroups, setSkillGroups] = useState<SkillGroupDraft[]>(
+    (profile?.skill_groups ?? []).map((g) => ({
+      category: g.category,
+      items: g.items.join(", "),
+    }))
+  );
   const [social, setSocial] = useState<SocialLinks>(
     profile?.social_links ?? {}
   );
 
+  const skillGroupsJson = JSON.stringify(
+    skillGroups
+      .filter((g) => g.category.trim())
+      .map((g) => ({
+        category: g.category.trim(),
+        items: g.items
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      }))
+  );
+
+  // After a successful save, resync local state with what the server
+  // actually persisted (new upload URLs). Without this, a second save in
+  // the same session would resubmit the stale pre-upload values and wipe
+  // out whatever was just uploaded. Handled during render (React's
+  // recommended pattern for reacting to a changed value) rather than in
+  // a useEffect, so it takes effect before the next paint.
+  const [lastHandledState, setLastHandledState] = useState(state);
+  if (state !== lastHandledState) {
+    setLastHandledState(state);
+    if (state.success && state.updated) {
+      setExistingPhotoUrl(state.updated.photo_url ?? "");
+      setPhotoPreview(state.updated.photo_url ?? null);
+      setExistingResumeUrl(state.updated.resume_url ?? "");
+      setResumeName(state.updated.resume_url ? "Current resume on file" : null);
+      setCertificates(state.updated.certificates);
+      setCertImagePreviews({});
+    }
+  }
+
   return (
     <form action={formAction} className="mt-8 space-y-6">
-      <input
-        type="hidden"
-        name="existing_photo_url"
-        value={profile?.photo_url ?? ""}
-      />
+      <input type="hidden" name="existing_photo_url" value={existingPhotoUrl} />
+      <input type="hidden" name="existing_resume_url" value={existingResumeUrl} />
       <input type="hidden" name="experience" value={JSON.stringify(experience)} />
       <input type="hidden" name="projects" value={JSON.stringify(projects)} />
       <input type="hidden" name="education" value={JSON.stringify(education)} />
@@ -98,6 +149,7 @@ export default function ProfileForm({
         name="certificates"
         value={JSON.stringify(certificates)}
       />
+      <input type="hidden" name="skill_groups" value={skillGroupsJson} />
       <input type="hidden" name="social_links" value={JSON.stringify(social)} />
 
       <Section
@@ -111,7 +163,7 @@ export default function ProfileForm({
               name="username"
               defaultValue={profile?.username ?? ""}
               required
-              pattern="[a-z0-9-]{3,30}"
+              pattern="[a-z0-9\-]{3,30}"
               title="Lowercase letters, numbers, and hyphens only (3-30 chars)"
               className={inputClass}
               placeholder="jane-doe"
@@ -152,6 +204,25 @@ export default function ProfileForm({
         </div>
       </Section>
 
+      <Section
+        title="Resume"
+        description="Shown as a Download Resume button on your page."
+      >
+        <input
+          type="file"
+          name="resume"
+          accept="application/pdf"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) setResumeName(file.name);
+          }}
+          className="text-sm text-violet-200 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-violet-500 file:px-3 file:py-1.5 file:text-white file:transition hover:file:bg-violet-400"
+        />
+        {resumeName && (
+          <p className="mt-2 text-xs text-violet-300">📄 {resumeName}</p>
+        )}
+      </Section>
+
       <Section title="Hero section" description="The first thing visitors see.">
         <div className="grid grid-cols-2 gap-4">
           <Field label="Full name">
@@ -179,6 +250,18 @@ export default function ProfileForm({
             placeholder="Full Stack Engineer"
           />
         </Field>
+        <Field label="Rotating headline phrases (optional, comma separated)">
+          <input
+            name="typewriter_phrases"
+            defaultValue={(profile?.typewriter_phrases ?? []).join(", ")}
+            className={inputClass}
+            placeholder="Computer Science, Tech Enthusiast"
+          />
+        </Field>
+        <p className="-mt-2 text-xs text-violet-400">
+          If set, these type-and-delete in a loop under your headline instead
+          of your static role title.
+        </p>
         <Field label="Tagline">
           <input
             name="tagline"
@@ -195,7 +278,7 @@ export default function ProfileForm({
             className={inputClass}
           />
         </Field>
-        <Field label="Skills (comma separated)">
+        <Field label="Highlight skills shown in hero (comma separated)">
           <input
             name="skills"
             defaultValue={(profile?.skills ?? []).join(", ")}
@@ -264,7 +347,14 @@ export default function ProfileForm({
         title="Projects"
         items={projects}
         setItems={setProjects}
-        empty={{ title: "", description: "", link: "", image_url: "" }}
+        empty={{
+          title: "",
+          description: "",
+          tags: "",
+          image_url: "",
+          link: "",
+          github_url: "",
+        }}
         renderFields={(item, update) => (
           <>
             <input
@@ -282,10 +372,30 @@ export default function ProfileForm({
             />
             <input
               className={inputClass}
-              placeholder="Link (optional)"
-              value={item.link}
-              onChange={(e) => update({ ...item, link: e.target.value })}
+              placeholder="Tech tags (e.g. Python, MySQL)"
+              value={item.tags}
+              onChange={(e) => update({ ...item, tags: e.target.value })}
             />
+            <input
+              className={inputClass}
+              placeholder="Cover image URL (optional)"
+              value={item.image_url}
+              onChange={(e) => update({ ...item, image_url: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                className={inputClass}
+                placeholder="View Details link (optional)"
+                value={item.link}
+                onChange={(e) => update({ ...item, link: e.target.value })}
+              />
+              <input
+                className={inputClass}
+                placeholder="GitHub link (optional)"
+                value={item.github_url}
+                onChange={(e) => update({ ...item, github_url: e.target.value })}
+              />
+            </div>
           </>
         )}
       />
@@ -331,8 +441,8 @@ export default function ProfileForm({
         title="Certificates"
         items={certificates}
         setItems={setCertificates}
-        empty={{ name: "", issuer: "", date: "", link: "" }}
-        renderFields={(item, update) => (
+        empty={{ name: "", issuer: "", date: "", link: "", image_url: "" }}
+        renderFields={(item, update, idx) => (
           <>
             <input
               className={inputClass}
@@ -346,6 +456,37 @@ export default function ProfileForm({
               value={item.issuer}
               onChange={(e) => update({ ...item, issuer: e.target.value })}
             />
+            <div className="flex items-center gap-3">
+              {(certImagePreviews[idx] ?? item.image_url) && (
+                <Image
+                  src={certImagePreviews[idx] ?? item.image_url}
+                  alt="Certificate preview"
+                  width={64}
+                  height={64}
+                  unoptimized
+                  className="h-16 w-16 rounded-lg border border-white/20 object-cover"
+                />
+              )}
+              <input
+                type="file"
+                name={`certificate_image_${idx}`}
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setCertImagePreviews((prev) => ({
+                      ...prev,
+                      [idx]: URL.createObjectURL(file),
+                    }));
+                  }
+                }}
+                className="flex-1 text-sm text-violet-200 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-violet-500 file:px-3 file:py-1.5 file:text-white file:transition hover:file:bg-violet-400"
+              />
+            </div>
+            <p className="text-xs text-violet-400">
+              Upload a scan/screenshot of the certificate — click-to-zoom on
+              your public page.
+            </p>
             <input
               className={inputClass}
               placeholder="Link (optional)"
@@ -355,6 +496,34 @@ export default function ProfileForm({
           </>
         )}
       />
+
+      <ListSection
+        title="Tech Stack Categories"
+        items={skillGroups}
+        setItems={setSkillGroups}
+        empty={{ category: "", items: "" }}
+        addLabel="+ Add category"
+        renderFields={(item, update) => (
+          <>
+            <input
+              className={inputClass}
+              placeholder="Category (e.g. Frontend)"
+              value={item.category}
+              onChange={(e) => update({ ...item, category: e.target.value })}
+            />
+            <input
+              className={inputClass}
+              placeholder="Items, comma separated (e.g. React, Next.js, Tailwind)"
+              value={item.items}
+              onChange={(e) => update({ ...item, items: e.target.value })}
+            />
+          </>
+        )}
+      />
+      <p className="-mt-3 px-1 text-xs text-violet-400">
+        Powers the sub-tabs under &quot;Tech Stack&quot; on your public page.
+        Leave empty to just show your hero skills there instead.
+      </p>
 
       <Section title="Footer / contact">
         <Field label="Contact email">
@@ -423,7 +592,7 @@ export default function ProfileForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg bg-violet-500 px-4 py-3 font-semibold text-white transition hover:bg-violet-400 disabled:opacity-60"
+        className="w-full rounded-lg bg-violet-500 px-4 py-3 font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:-translate-y-0.5 hover:bg-violet-400 disabled:pointer-events-none disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save changes"}
       </button>
@@ -437,12 +606,18 @@ function ListSection<T extends Record<string, string>>({
   setItems,
   empty,
   renderFields,
+  addLabel,
 }: {
   title: string;
   items: T[];
   setItems: (items: T[]) => void;
   empty: T;
-  renderFields: (item: T, update: (next: T) => void) => React.ReactNode;
+  renderFields: (
+    item: T,
+    update: (next: T) => void,
+    idx: number
+  ) => React.ReactNode;
+  addLabel?: string;
 }) {
   return (
     <Section title={title}>
@@ -451,11 +626,15 @@ function ListSection<T extends Record<string, string>>({
           key={idx}
           className="space-y-3 rounded-xl border border-white/10 bg-black/10 p-4"
         >
-          {renderFields(item, (next) => {
-            const copy = [...items];
-            copy[idx] = next;
-            setItems(copy);
-          })}
+          {renderFields(
+            item,
+            (next) => {
+              const copy = [...items];
+              copy[idx] = next;
+              setItems(copy);
+            },
+            idx
+          )}
           <button
             type="button"
             onClick={() => setItems(items.filter((_, i) => i !== idx))}
@@ -470,7 +649,7 @@ function ListSection<T extends Record<string, string>>({
         onClick={() => setItems([...items, empty])}
         className="rounded-lg border border-dashed border-white/20 px-3 py-2 text-sm text-violet-200 hover:bg-white/10"
       >
-        + Add {title.toLowerCase().replace(/s$/, "")}
+        {addLabel ?? `+ Add ${title.toLowerCase().replace(/s$/, "")}`}
       </button>
     </Section>
   );

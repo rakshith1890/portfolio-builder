@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logOut } from "@/app/auth/actions";
 import ProfileForm from "./ProfileForm";
-import type { Profile } from "@/lib/types";
+import MessagesInbox from "./MessagesInbox";
+import { normalizeProfile, type Message, type Profile } from "@/lib/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -14,11 +15,20 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
+  const { data: profileRow } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .maybeSingle<Profile>();
+
+  const profile = profileRow ? normalizeProfile(profileRow) : null;
+
+  const { data: messages } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("profile_id", user.id)
+    .order("created_at", { ascending: false })
+    .returns<Message[]>();
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-900">
@@ -57,6 +67,8 @@ export default async function DashboardPage() {
         </p>
 
         <ProfileForm profile={profile ?? null} email={user.email ?? ""} />
+
+        <MessagesInbox messages={messages ?? []} />
       </div>
     </main>
   );

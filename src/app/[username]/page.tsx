@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/lib/types";
-import Tabs from "./Tabs";
+import { normalizeProfile, type Profile } from "@/lib/types";
+import { getTechIcon } from "@/lib/techIcons";
+import Showcase from "./Showcase";
+import Typewriter from "./Typewriter";
+import ContactForm from "./ContactForm";
 
 export default async function PublicProfilePage({
   params,
@@ -12,16 +15,23 @@ export default async function PublicProfilePage({
   const { username } = await params;
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
+  const { data: row } = await supabase
     .from("profiles")
     .select("*")
     .eq("username", username)
     .eq("published", true)
     .maybeSingle<Profile>();
 
-  if (!profile) {
+  if (!row) {
     notFound();
   }
+
+  const profile = normalizeProfile(row);
+
+  const skillGroupsWithIcons = profile.skill_groups.map((group) => ({
+    category: group.category,
+    items: group.items.map((name) => ({ name, icon: getTechIcon(name) })),
+  }));
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-900 text-white">
@@ -80,9 +90,15 @@ export default async function PublicProfilePage({
         )}
 
         {profile.role_title && (
-          <p className="animate-fade-in-up delay-200 mt-5 text-xl font-semibold text-violet-100 sm:text-2xl">
-            {profile.role_title}
-            <span className="animate-blink ml-1 text-violet-300">|</span>
+          <p className="animate-fade-in-up delay-200 mt-5 min-h-[2em] text-xl font-semibold text-violet-100 sm:text-2xl">
+            {profile.typewriter_phrases.length > 0 ? (
+              <Typewriter phrases={profile.typewriter_phrases} />
+            ) : (
+              <>
+                {profile.role_title}
+                <span className="animate-blink ml-1 text-violet-300">|</span>
+              </>
+            )}
           </p>
         )}
 
@@ -94,9 +110,9 @@ export default async function PublicProfilePage({
 
         {profile.skills.length > 0 && (
           <div className="animate-fade-in-up delay-300 mt-6 flex flex-wrap justify-center gap-2">
-            {profile.skills.map((skill) => (
+            {profile.skills.map((skill, i) => (
               <span
-                key={skill}
+                key={`${skill}-${i}`}
                 className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-violet-100 transition hover:-translate-y-0.5 hover:bg-violet-500 hover:text-white"
               >
                 {skill}
@@ -114,12 +130,16 @@ export default async function PublicProfilePage({
               ✉ Contact Me
             </a>
           )}
-          <a
-            href="#showcase"
-            className="rounded-lg border border-white/20 px-6 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
-          >
-            View my work ↓
-          </a>
+          {profile.resume_url && (
+            <a
+              href={profile.resume_url}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg border border-white/20 px-6 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+            >
+              📄 Download Resume
+            </a>
+          )}
         </div>
       </section>
 
@@ -133,37 +153,15 @@ export default async function PublicProfilePage({
         </section>
       )}
 
-      {/* Stats */}
-      <section className="mx-auto grid max-w-3xl grid-cols-1 gap-4 px-4 py-6 sm:grid-cols-3">
-        <StatTile
-          icon="⚡"
-          label="Projects"
-          value={profile.projects.length}
-          desc="Things I've built"
-        />
-        <StatTile
-          icon="💼"
-          label="Experience"
-          value={profile.experience.length}
-          desc="Roles held"
-        />
-        <StatTile
-          icon="🏆"
-          label="Certificates"
-          value={profile.certificates.length}
-          desc="Skills validated"
-        />
-      </section>
-
-      {/* Tabbed showcase */}
+      {/* Showcase (stats + tabs) */}
       <section id="showcase" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-8">
-        <h2 className="mb-6 text-xl font-bold">Portfolio Showcase</h2>
-        <Tabs
+        <Showcase
           experience={profile.experience}
           projects={profile.projects}
           education={profile.education}
           certificates={profile.certificates}
           skills={profile.skills}
+          skillGroups={skillGroupsWithIcons}
         />
       </section>
 
@@ -176,7 +174,13 @@ export default async function PublicProfilePage({
         <p className="mt-2 text-sm text-violet-200">
           Open to opportunities! Feel free to reach out.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm">
+
+        <div className="mx-auto mt-6 max-w-md">
+          <ContactForm profileId={profile.id} />
+        </div>
+
+        <h3 className="mt-12 text-lg font-semibold">Connect With Me</h3>
+        <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm">
           {profile.contact_email && (
             <FooterLink href={`mailto:${profile.contact_email}`} icon="✉">
               {profile.contact_email}
@@ -209,36 +213,6 @@ export default async function PublicProfilePage({
         </p>
       </footer>
     </main>
-  );
-}
-
-function StatTile({
-  icon,
-  label,
-  value,
-  desc,
-}: {
-  icon: string;
-  label: string;
-  value: number;
-  desc: string;
-}) {
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition hover:-translate-y-1 hover:border-violet-400/40 hover:bg-white/10">
-      <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl">
-          {icon}
-        </div>
-        <span className="text-violet-400 transition group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-violet-200">
-          ↗
-        </span>
-      </div>
-      <div className="mt-4 text-3xl font-bold">{value}</div>
-      <div className="text-xs font-semibold uppercase tracking-wide text-violet-300">
-        {label}
-      </div>
-      <div className="mt-1 text-xs text-violet-400">{desc}</div>
-    </div>
   );
 }
 
