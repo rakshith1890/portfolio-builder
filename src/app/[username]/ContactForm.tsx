@@ -6,7 +6,7 @@ import { sendMessage, type ContactState } from "./actions";
 const initialState: ContactState = { error: null, success: false };
 
 const inputClass =
-  "w-full rounded-lg border border-white/10 bg-white/10 px-4 py-2.5 text-white placeholder-violet-300/50 outline-none transition focus:border-violet-400";
+  "w-full rounded-lg border border-white/10 bg-white/10 px-4 py-2.5 text-white placeholder-violet-300/50 outline-none transition focus:border-violet-400 lg:px-5 lg:py-3.5 lg:text-lg";
 
 export default function ContactForm({ profileId }: { profileId: string }) {
   const boundAction = sendMessage.bind(null, profileId);
@@ -21,7 +21,7 @@ export default function ContactForm({ profileId }: { profileId: string }) {
   }
 
   return (
-    <form action={formAction} className="space-y-3 text-left">
+    <form action={formAction} className="space-y-3 text-left lg:space-y-4">
       <input name="name" required placeholder="Your Name" className={inputClass} />
       <input
         type="email"
@@ -45,7 +45,7 @@ export default function ContactForm({ profileId }: { profileId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg bg-violet-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:-translate-y-0.5 hover:bg-violet-400 disabled:pointer-events-none disabled:opacity-60"
+        className="w-full rounded-lg bg-violet-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:-translate-y-0.5 hover:bg-violet-400 disabled:pointer-events-none disabled:opacity-60 lg:py-3.5 lg:text-lg"
       >
         {pending ? "Sending…" : "Send Message"}
       </button>

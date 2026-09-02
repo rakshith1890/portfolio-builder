@@ -6,6 +6,7 @@ import { getTechIcon } from "@/lib/techIcons";
 import Showcase from "./Showcase";
 import Typewriter from "./Typewriter";
 import ContactForm from "./ContactForm";
+import Nav from "./Nav";
 
 export default async function PublicProfilePage({
   params,
@@ -35,126 +36,113 @@ export default async function PublicProfilePage({
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-900 text-white">
-      {/* Sticky nav */}
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-violet-950/70 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
-          <p className="font-bold">
-            {profile.full_name}
-            {profile.pronouns && (
-              <span className="ml-2 text-sm font-normal text-violet-300">
-                ({profile.pronouns})
-              </span>
-            )}
-          </p>
-          <nav className="hidden gap-6 text-sm text-violet-200 sm:flex">
-            <a href="#about" className="transition hover:text-white">About</a>
-            <a href="#showcase" className="transition hover:text-white">Showcase</a>
-            <a href="#contact" className="transition hover:text-white">Contact</a>
-          </nav>
-          {profile.contact_email && (
-            <a
-              href={`mailto:${profile.contact_email}`}
-              className="rounded-full bg-violet-500 px-4 py-1.5 text-sm font-semibold text-white transition hover:scale-105 hover:bg-violet-400"
-            >
-              Let&apos;s Connect ✉
-            </a>
-          )}
-        </div>
-      </header>
+      <Nav
+        fullName={profile.full_name}
+        pronouns={profile.pronouns}
+        contactEmail={profile.contact_email}
+      />
 
       {/* Hero */}
-      <section className="mx-auto max-w-3xl px-4 pt-16 pb-10 text-center">
+      <section className="mx-auto max-w-3xl px-4 pt-16 pb-10 text-center lg:flex lg:max-w-6xl lg:flex-row-reverse lg:items-center lg:gap-16 lg:px-8 lg:pt-24 lg:pb-16 lg:text-left">
         {profile.photo_url && (
-          <div className="animate-fade-in-up animate-float mx-auto w-fit">
+          <div className="animate-fade-in-up animate-float mx-auto w-fit lg:mx-0 lg:flex-shrink-0">
             <div className="rounded-full bg-gradient-to-br from-violet-400 via-fuchsia-400 to-violet-500 p-1.5 shadow-2xl shadow-violet-900/50">
               <Image
                 src={profile.photo_url}
                 alt={profile.full_name}
-                width={220}
-                height={220}
+                width={320}
+                height={320}
                 unoptimized
-                className="h-40 w-40 rounded-full border-4 border-violet-950 object-cover sm:h-52 sm:w-52"
+                className="h-40 w-40 rounded-full border-4 border-violet-950 object-cover sm:h-52 sm:w-52 lg:h-80 lg:w-80"
               />
             </div>
           </div>
         )}
 
-        <h1 className="animate-fade-in-up delay-100 mt-8 text-3xl font-bold sm:text-5xl">
-          {profile.full_name}
-        </h1>
+        <div className="lg:flex-1">
+          <h1 className="animate-fade-in-up delay-100 mt-8 text-3xl font-bold sm:text-5xl lg:mt-0 lg:text-6xl">
+            {profile.full_name}
+          </h1>
 
-        {profile.tagline && (
-          <p className="animate-fade-in-up delay-100 mt-4 inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm text-violet-100">
-            ✨ {profile.tagline}
-          </p>
-        )}
+          {profile.tagline && (
+            <p className="animate-fade-in-up delay-100 mt-4 inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm text-violet-100 lg:px-5 lg:py-2 lg:text-base">
+              ✨ {profile.tagline}
+            </p>
+          )}
 
-        {profile.role_title && (
-          <p className="animate-fade-in-up delay-200 mt-5 min-h-[2em] text-xl font-semibold text-violet-100 sm:text-2xl">
-            {profile.typewriter_phrases.length > 0 ? (
-              <Typewriter phrases={profile.typewriter_phrases} />
-            ) : (
-              <>
-                {profile.role_title}
-                <span className="animate-blink ml-1 text-violet-300">|</span>
-              </>
-            )}
-          </p>
-        )}
+          {profile.role_title && (
+            <p className="animate-fade-in-up delay-200 mt-5 min-h-[2em] text-xl font-semibold text-violet-100 sm:text-2xl lg:text-3xl">
+              {profile.typewriter_phrases.length > 0 ? (
+                <Typewriter phrases={profile.typewriter_phrases} />
+              ) : (
+                <>
+                  {profile.role_title}
+                  <span className="animate-blink ml-1 text-violet-300">|</span>
+                </>
+              )}
+            </p>
+          )}
 
-        {profile.bio && (
-          <p className="animate-fade-in-up delay-200 mx-auto mt-4 max-w-xl text-sm leading-relaxed text-violet-200">
-            {profile.bio}
-          </p>
-        )}
+          {profile.bio && (
+            <p className="animate-fade-in-up delay-200 mx-auto mt-4 max-w-xl text-sm leading-relaxed text-violet-200 lg:mx-0 lg:max-w-none lg:text-lg">
+              {profile.bio}
+            </p>
+          )}
 
-        {profile.skills.length > 0 && (
-          <div className="animate-fade-in-up delay-300 mt-6 flex flex-wrap justify-center gap-2">
-            {profile.skills.map((skill, i) => (
-              <span
-                key={`${skill}-${i}`}
-                className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-violet-100 transition hover:-translate-y-0.5 hover:bg-violet-500 hover:text-white"
+          {profile.skills.length > 0 && (
+            <div className="animate-fade-in-up delay-300 mt-6 flex flex-wrap justify-center gap-2 lg:justify-start">
+              {profile.skills.map((skill, i) => (
+                <span
+                  key={`${skill}-${i}`}
+                  className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-violet-100 transition hover:-translate-y-0.5 hover:bg-violet-500 hover:text-white lg:px-4 lg:py-2 lg:text-sm"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="animate-fade-in-up delay-300 mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
+            {profile.contact_email && (
+              <a
+                href={`mailto:${profile.contact_email}`}
+                className="rounded-lg bg-violet-500 px-6 py-3 font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:-translate-y-0.5 hover:bg-violet-400 lg:px-8 lg:py-3.5 lg:text-lg"
               >
-                {skill}
-              </span>
-            ))}
+                ✉ Contact Me
+              </a>
+            )}
+            {profile.resume_url && (
+              <a
+                href={profile.resume_url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg border border-white/20 px-6 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10 lg:px-8 lg:py-3.5 lg:text-lg"
+              >
+                📄 Download Resume
+              </a>
+            )}
           </div>
-        )}
-
-        <div className="animate-fade-in-up delay-300 mt-8 flex flex-wrap justify-center gap-3">
-          {profile.contact_email && (
-            <a
-              href={`mailto:${profile.contact_email}`}
-              className="rounded-lg bg-violet-500 px-6 py-3 font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:-translate-y-0.5 hover:bg-violet-400"
-            >
-              ✉ Contact Me
-            </a>
-          )}
-          {profile.resume_url && (
-            <a
-              href={profile.resume_url}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg border border-white/20 px-6 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
-            >
-              📄 Download Resume
-            </a>
-          )}
         </div>
       </section>
 
       {/* About */}
       {profile.about && (
-        <section id="about" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-8">
-          <h2 className="text-xl font-bold">About Me</h2>
-          <p className="mt-3 text-sm leading-relaxed text-violet-100">
+        <section
+          id="about"
+          className="mx-auto max-w-3xl scroll-mt-20 px-4 py-8 lg:max-w-6xl lg:px-8 lg:py-12"
+        >
+          <h2 className="text-xl font-bold lg:text-2xl">About Me</h2>
+          <p className="mt-3 text-sm leading-relaxed text-violet-100 lg:max-w-3xl lg:text-base">
             {profile.about}
           </p>
         </section>
       )}
 
       {/* Showcase (stats + tabs) */}
-      <section id="showcase" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-8">
+      <section
+        id="showcase"
+        className="mx-auto max-w-3xl scroll-mt-20 px-4 py-8 lg:max-w-6xl lg:px-8 lg:py-12"
+      >
         <Showcase
           experience={profile.experience}
           projects={profile.projects}
@@ -168,46 +156,66 @@ export default async function PublicProfilePage({
       {/* Footer / contact */}
       <footer
         id="contact"
-        className="mx-auto max-w-3xl scroll-mt-20 px-4 py-16 text-center"
+        className="mx-auto max-w-3xl scroll-mt-20 px-4 py-16 text-center lg:max-w-6xl lg:px-8 lg:py-24 lg:text-left"
       >
-        <h2 className="text-xl font-bold">Get in Touch</h2>
-        <p className="mt-2 text-sm text-violet-200">
+        <h2 className="text-xl font-bold lg:text-2xl">Get in Touch</h2>
+        <p className="mt-2 text-sm text-violet-200 lg:text-base">
           Open to opportunities! Feel free to reach out.
         </p>
 
-        <div className="mx-auto mt-6 max-w-md">
-          <ContactForm profileId={profile.id} />
+        <div className="mt-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-12">
+          <div className="mx-auto max-w-md lg:mx-0 lg:max-w-none">
+            <ContactForm profileId={profile.id} />
+          </div>
+
+          <div className="mt-12 lg:mt-0">
+            <h3 className="text-lg font-semibold lg:text-xl">Connect With Me</h3>
+            <div className="mx-auto mt-4 flex max-w-md flex-col gap-3 lg:mx-0 lg:max-w-none">
+              {profile.contact_email && (
+                <FooterLink
+                  href={`mailto:${profile.contact_email}`}
+                  icon="✉"
+                  label="Email"
+                  value={profile.contact_email}
+                />
+              )}
+              {profile.social_links.linkedin && (
+                <FooterLink
+                  href={profile.social_links.linkedin}
+                  icon="in"
+                  label="LinkedIn"
+                  value={profile.social_links.linkedin}
+                />
+              )}
+              {profile.social_links.github && (
+                <FooterLink
+                  href={profile.social_links.github}
+                  icon="⌥"
+                  label="GitHub"
+                  value={profile.social_links.github}
+                />
+              )}
+              {profile.social_links.twitter && (
+                <FooterLink
+                  href={profile.social_links.twitter}
+                  icon="𝕏"
+                  label="Twitter"
+                  value={profile.social_links.twitter}
+                />
+              )}
+              {profile.social_links.website && (
+                <FooterLink
+                  href={profile.social_links.website}
+                  icon="🌐"
+                  label="Website"
+                  value={profile.social_links.website}
+                />
+              )}
+            </div>
+          </div>
         </div>
 
-        <h3 className="mt-12 text-lg font-semibold">Connect With Me</h3>
-        <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm">
-          {profile.contact_email && (
-            <FooterLink href={`mailto:${profile.contact_email}`} icon="✉">
-              {profile.contact_email}
-            </FooterLink>
-          )}
-          {profile.social_links.linkedin && (
-            <FooterLink href={profile.social_links.linkedin} icon="in">
-              LinkedIn
-            </FooterLink>
-          )}
-          {profile.social_links.github && (
-            <FooterLink href={profile.social_links.github} icon="⌥">
-              GitHub
-            </FooterLink>
-          )}
-          {profile.social_links.twitter && (
-            <FooterLink href={profile.social_links.twitter} icon="𝕏">
-              Twitter
-            </FooterLink>
-          )}
-          {profile.social_links.website && (
-            <FooterLink href={profile.social_links.website} icon="🌐">
-              Website
-            </FooterLink>
-          )}
-        </div>
-        <p className="mt-10 text-xs text-violet-400">
+        <p className="mt-16 text-center text-xs text-violet-400 lg:mt-20">
           © {new Date().getFullYear()} {profile.full_name}. Built with Portfolio
           Builder.
         </p>
@@ -219,21 +227,32 @@ export default async function PublicProfilePage({
 function FooterLink({
   href,
   icon,
-  children,
+  label,
+  value,
 }: {
   href: string;
   icon: string;
-  children: React.ReactNode;
+  label: string;
+  value: string;
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="flex items-center gap-2 rounded-lg border border-white/20 px-4 py-2 transition hover:-translate-y-0.5 hover:border-violet-400/50 hover:bg-white/10"
+      className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-left transition hover:-translate-y-0.5 hover:border-violet-400/50 hover:bg-white/10 lg:px-5 lg:py-4"
     >
-      <span className="font-semibold">{icon}</span>
-      {children}
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-base font-semibold text-violet-200 lg:h-11 lg:w-11">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-white lg:text-base">
+          {label}
+        </span>
+        <span className="block truncate text-xs text-violet-300 lg:text-sm">
+          {value}
+        </span>
+      </span>
     </a>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import type {
   CertificateItem,
@@ -30,6 +30,25 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
 ];
 
 const PAGE_SIZE = 3;
+
+// Nav links use one hash per section (e.g. #tech-stack); the tab state
+// underneath uses shorter keys (e.g. "skills"). Map between the two so
+// clicking a nav link opens the right tab, and switching tabs updates the
+// URL to match.
+const HASH_TO_TAB: Record<string, TabKey> = {
+  experience: "experience",
+  projects: "projects",
+  education: "education",
+  certificates: "certificates",
+  "tech-stack": "skills",
+};
+const TAB_TO_HASH: Record<TabKey, string> = {
+  experience: "experience",
+  projects: "projects",
+  education: "education",
+  certificates: "certificates",
+  skills: "tech-stack",
+};
 
 function scrollToShowcase() {
   document
@@ -67,11 +86,30 @@ export default function Showcase({
     null
   );
 
-  const goTo = (tab: TabKey) => {
+  const goTo = (tab: TabKey, opts: { scroll?: boolean } = {}) => {
     setActive(tab);
     setShowAll(false);
-    scrollToShowcase();
+    if (opts.scroll ?? true) scrollToShowcase();
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", `#${TAB_TO_HASH[tab]}`);
+    }
   };
+
+  // Let the nav's per-section links (#experience, #tech-stack, ...) open the
+  // matching tab — both on load (direct link) and when clicked while already
+  // on the page (hashchange, since there's no in-DOM element to jump to).
+  useEffect(() => {
+    const applyHash = () => {
+      const key = HASH_TO_TAB[window.location.hash.slice(1)];
+      if (key && available.some((t) => t.key === key)) {
+        goTo(key);
+      }
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const visibleExperience = showAll ? experience : experience.slice(0, PAGE_SIZE);
   const visibleProjects = showAll ? projects : projects.slice(0, PAGE_SIZE);
@@ -116,14 +154,18 @@ export default function Showcase({
         />
       </div>
 
-      <h2 className="mb-6 text-xl font-bold">Portfolio Showcase</h2>
+      <h2 className="text-xl font-bold lg:text-2xl">Portfolio Showcase</h2>
+      <p className="mt-2 mb-6 max-w-xl text-sm text-violet-300 lg:max-w-2xl lg:text-base">
+        Explore my journey through projects, experience, education, and
+        technical expertise — each section is a milestone along the way.
+      </p>
 
       <div className="flex flex-wrap gap-2">
         {available.map((tab) => (
           <button
             key={tab.key}
             onClick={() => goTo(tab.key)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 ${
+            className={`rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 lg:px-5 lg:py-2.5 lg:text-base ${
               active === tab.key
                 ? "bg-violet-500 text-white shadow-lg shadow-violet-900/40"
                 : "bg-white/10 text-violet-200 hover:bg-white/20"
@@ -144,7 +186,7 @@ export default function Showcase({
         {active === "experience" &&
           visibleExperience.map((item, i) => (
             <Card key={i}>
-              <h3 className="font-semibold text-white">{item.title}</h3>
+              <h3 className="font-semibold text-white lg:text-lg">{item.title}</h3>
               <p className="text-sm text-violet-300">{item.company}</p>
               <p className="text-xs text-violet-400">
                 {item.start_date} – {item.end_date || "Present"}
@@ -169,7 +211,7 @@ export default function Showcase({
                 />
               )}
               <div className="p-5">
-                <h3 className="font-semibold text-white">{item.title}</h3>
+                <h3 className="font-semibold text-white lg:text-lg">{item.title}</h3>
                 {item.description && (
                   <p className="mt-1 text-sm text-violet-100">{item.description}</p>
                 )}
@@ -203,7 +245,7 @@ export default function Showcase({
         {active === "education" &&
           visibleEducation.map((item, i) => (
             <Card key={i}>
-              <h3 className="font-semibold text-white">{item.school}</h3>
+              <h3 className="font-semibold text-white lg:text-lg">{item.school}</h3>
               <p className="text-sm text-violet-300">{item.degree}</p>
               <p className="text-xs text-violet-400">
                 {item.start_date} – {item.end_date}
@@ -233,7 +275,7 @@ export default function Showcase({
                 </button>
               )}
               <div className="p-5">
-                <h3 className="font-semibold text-white">{item.name}</h3>
+                <h3 className="font-semibold text-white lg:text-lg">{item.name}</h3>
                 <p className="text-sm text-violet-300">{item.issuer}</p>
                 {item.link && (
                   <a
@@ -378,21 +420,21 @@ function StatTile({
   return (
     <button
       onClick={onClick}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition hover:-translate-y-1 hover:border-violet-400/40 hover:bg-white/10"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition hover:-translate-y-1 hover:border-violet-400/40 hover:bg-white/10 lg:p-7"
     >
       <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl lg:h-12 lg:w-12 lg:text-2xl">
           {icon}
         </div>
         <span className="text-violet-400 transition group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-violet-200">
           ↗
         </span>
       </div>
-      <div className="mt-4 text-3xl font-bold">{value}</div>
-      <div className="text-xs font-semibold uppercase tracking-wide text-violet-300">
+      <div className="mt-4 text-3xl font-bold lg:text-4xl">{value}</div>
+      <div className="text-xs font-semibold uppercase tracking-wide text-violet-300 lg:text-sm">
         {label}
       </div>
-      <div className="mt-1 text-xs text-violet-400">{desc}</div>
+      <div className="mt-1 text-xs text-violet-400 lg:text-sm">{desc}</div>
     </button>
   );
 }
