@@ -518,7 +518,7 @@ export default function ProfileFormFields({
               <input
                 type="file"
                 name={`certificate_image_${idx}`}
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,.jpg,.jpeg,.png"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {

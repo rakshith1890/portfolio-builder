@@ -116,6 +116,9 @@ export async function buildProfileUpsert(
   for (let i = 0; i < certificates.length; i++) {
     const file = formData.get(`certificate_image_${i}`) as File | null;
     if (file && file.size > 0) {
+      if (!["image/jpeg", "image/png"].includes(file.type)) {
+        return { error: "Certificate images must be a JPG, JPEG, or PNG file." };
+      }
       const result = await uploadFile(
         supabase,
         "certificates",
