@@ -179,7 +179,7 @@ export default function AuroraShowcase({
       <div
         className={`mt-6 ${
           active === "certificates"
-            ? "grid grid-cols-1 gap-4 sm:grid-cols-2"
+            ? "grid grid-cols-1 gap-6 sm:grid-cols-2"
             : "space-y-4"
         }`}
       >
@@ -254,37 +254,39 @@ export default function AuroraShowcase({
 
         {active === "certificates" &&
           visibleCertificates.map((item, i) => (
-            <Card key={i} padded={false}>
-              {item.image_url && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setLightbox({ src: item.image_url, alt: item.name })
-                  }
-                  className="block w-full cursor-zoom-in"
-                >
-                  <Image
-                    src={item.image_url}
-                    alt={item.name}
-                    width={640}
-                    height={280}
-                    className="h-40 w-full rounded-t-xl object-cover transition hover:opacity-90"
-                  />
-                </button>
-              )}
-              <div className="p-5">
-                <h3 className="font-semibold text-white lg:text-lg">{item.name}</h3>
-                <p className="text-sm text-violet-300">{item.issuer}</p>
-                {item.link && (
-                  <a
-                    href={item.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-block text-sm text-violet-300 underline transition hover:text-violet-100"
+            <Card key={i}>
+              <div className="flex items-start gap-5">
+                {item.image_url && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLightbox({ src: item.image_url, alt: item.name })
+                    }
+                    className="block h-28 w-28 flex-shrink-0 cursor-zoom-in overflow-hidden rounded-xl sm:h-32 sm:w-32"
                   >
-                    View credential ↗
-                  </a>
+                    <Image
+                      src={item.image_url}
+                      alt={item.name}
+                      width={160}
+                      height={160}
+                      className="h-full w-full object-cover transition hover:opacity-90"
+                    />
+                  </button>
                 )}
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-white lg:text-lg">{item.name}</h3>
+                  <p className="text-sm text-violet-300">{item.issuer}</p>
+                  {item.link && (
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block text-sm text-violet-300 underline transition hover:text-violet-100"
+                    >
+                      View credential ↗
+                    </a>
+                  )}
+                </div>
               </div>
             </Card>
           ))}

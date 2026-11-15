@@ -209,37 +209,39 @@ export default function NovaShowcase({
         )}
 
         {active === "certificates" && (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {visibleCertificates.map((item, i) => (
               <BrowserCard key={i}>
-                {item.image_url && (
-                  <button
-                    type="button"
-                    onClick={() => setLightbox({ src: item.image_url, alt: item.name })}
-                    className="block w-full cursor-zoom-in"
-                  >
-                    <Image
-                      src={item.image_url}
-                      alt={item.name}
-                      width={480}
-                      height={260}
-                      className="h-36 w-full object-cover transition hover:opacity-90"
-                    />
-                  </button>
-                )}
-                <div className="p-4">
-                  <h3 className="font-semibold text-teal-50">{item.name}</h3>
-                  <p className="text-sm text-teal-100/60">{item.issuer}</p>
-                  {item.link && (
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-2 inline-block text-sm text-teal-300 hover:text-teal-200"
+                <div className="flex items-start gap-5 p-5">
+                  {item.image_url && (
+                    <button
+                      type="button"
+                      onClick={() => setLightbox({ src: item.image_url, alt: item.name })}
+                      className="block h-28 w-28 flex-shrink-0 cursor-zoom-in overflow-hidden rounded-xl sm:h-32 sm:w-32"
                     >
-                      View credential ↗
-                    </a>
+                      <Image
+                        src={item.image_url}
+                        alt={item.name}
+                        width={160}
+                        height={160}
+                        className="h-full w-full object-cover transition hover:opacity-90"
+                      />
+                    </button>
                   )}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-teal-50">{item.name}</h3>
+                    <p className="text-sm text-teal-100/60">{item.issuer}</p>
+                    {item.link && (
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-block text-sm text-teal-300 hover:text-teal-200"
+                      >
+                        View credential ↗
+                      </a>
+                    )}
+                  </div>
                 </div>
               </BrowserCard>
             ))}
