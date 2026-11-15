@@ -6,7 +6,7 @@ import NovaShowcase from "./NovaShowcase";
 import Typewriter from "../../Typewriter";
 import ContactForm from "../../ContactForm";
 
-const BLOB = "rounded-[71%_29%_65%_35%/50%_45%_55%_50%]";
+const BLOB = "rounded-full";
 
 export default function NovaTemplate({ profile }: { profile: Profile }) {
   const skillGroupsWithIcons = profile.skill_groups.map((group) => ({
@@ -112,7 +112,7 @@ export default function NovaTemplate({ profile }: { profile: Profile }) {
         </div>
 
         {profile.photo_url && (
-          <div className="relative mx-auto aspect-square w-56 flex-shrink-0 sm:w-72 lg:w-96">
+          <div className="relative mx-auto aspect-square w-64 flex-shrink-0 sm:w-80 lg:w-[28rem]">
             <div className={`absolute inset-0 ${BLOB} border border-teal-400/30`} />
             <div className={`absolute inset-3 overflow-hidden ${BLOB} bg-teal-900/40`}>
               <Image

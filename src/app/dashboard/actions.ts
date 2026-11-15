@@ -48,6 +48,25 @@ export async function saveProfile(
   return { error: null, success: true, updated: result.updated };
 }
 
+export async function checkUsernameAvailability(
+  username: string,
+  excludeId?: string
+): Promise<{ available: boolean }> {
+  const normalized = username.trim().toLowerCase();
+  if (!/^[a-z0-9-]{3,30}$/.test(normalized)) {
+    return { available: true };
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", normalized)
+    .maybeSingle();
+
+  return { available: !data || data.id === excludeId };
+}
+
 export async function markMessageRead(messageId: string) {
   const supabase = await createClient();
   await supabase.from("messages").update({ read: true }).eq("id", messageId);
