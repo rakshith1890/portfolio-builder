@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import type { SaveState } from "./actions";
+import { checkUsernameAvailability, type SaveState } from "./actions";
 import type {
   CertificateItem,
   EducationItem,
@@ -107,6 +107,40 @@ export default function ProfileFormFields({
   const [social, setSocial] = useState<SocialLinks>(
     profile?.social_links ?? {}
   );
+  const [username, setUsername] = useState(profile?.username ?? "");
+  const [checkResult, setCheckResult] = useState<{
+    username: string;
+    available: boolean;
+  } | null>(null);
+
+  const normalizedUsername = username.trim().toLowerCase();
+  const usernameChanged =
+    normalizedUsername !== (profile?.username ?? "") &&
+    /^[a-z0-9-]{3,30}$/.test(normalizedUsername);
+
+  useEffect(() => {
+    if (!usernameChanged) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      checkUsernameAvailability(normalizedUsername, profile?.id).then((result) => {
+        if (!cancelled) {
+          setCheckResult({ username: normalizedUsername, available: result.available });
+        }
+      });
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [normalizedUsername, usernameChanged, profile?.id]);
+
+  const usernameStatus = !usernameChanged
+    ? "idle"
+    : checkResult?.username === normalizedUsername
+      ? checkResult.available
+        ? "available"
+        : "taken"
+      : "checking";
 
   const skillGroupsJson = JSON.stringify(
     skillGroups
@@ -163,7 +197,8 @@ export default function ProfileFormFields({
             <span className="text-sm">yourapp.com/</span>
             <input
               name="username"
-              defaultValue={profile?.username ?? ""}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               pattern="[a-z0-9\-]{3,30}"
               title="Lowercase letters, numbers, and hyphens only (3-30 chars)"
@@ -171,6 +206,17 @@ export default function ProfileFormFields({
               placeholder="jane-doe"
             />
           </div>
+          {usernameStatus === "checking" && (
+            <p className="mt-1 text-sm text-violet-300">Checking availability…</p>
+          )}
+          {usernameStatus === "taken" && (
+            <p className="mt-1 text-sm text-red-400">
+              This username is already taken. Please choose another.
+            </p>
+          )}
+          {usernameStatus === "available" && (
+            <p className="mt-1 text-sm text-green-400">This username is available.</p>
+          )}
         </Field>
       </Section>
 
