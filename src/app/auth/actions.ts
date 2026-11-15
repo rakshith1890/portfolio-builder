@@ -28,7 +28,7 @@ export async function signUp(
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  redirect("/onboarding");
 }
 
 export async function logIn(

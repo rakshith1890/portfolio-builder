@@ -42,9 +42,18 @@ export interface SocialLinks {
   website?: string;
 }
 
+export type TemplateId = "aurora" | "nova";
+
+export const TEMPLATE_IDS: TemplateId[] = ["aurora", "nova"];
+
+export function isTemplateId(value: unknown): value is TemplateId {
+  return value === "aurora" || value === "nova";
+}
+
 export interface Profile {
   id: string;
   username: string;
+  template: TemplateId;
 
   full_name: string;
   pronouns: string;
@@ -90,6 +99,7 @@ export function normalizeProfile(row: Partial<Profile> & { id: string }): Profil
   return {
     ...emptyProfileDraft(),
     ...row,
+    template: isTemplateId(row.template) ? row.template : "aurora",
     skills: row.skills ?? [],
     typewriter_phrases: row.typewriter_phrases ?? [],
     experience: row.experience ?? [],
@@ -108,6 +118,7 @@ export const emptyProfileDraft = (): Omit<
   "id" | "created_at" | "updated_at"
 > => ({
   username: "",
+  template: "aurora",
   full_name: "",
   pronouns: "",
   role_title: "",

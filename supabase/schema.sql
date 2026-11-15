@@ -32,6 +32,10 @@ create table if not exists public.profiles (
   contact_email text default '',
   social_links jsonb not null default '{}', -- {linkedin, github, twitter, website}
 
+  -- Which public-page design renders this profile. Keep this list in sync
+  -- with TemplateId in src/lib/types.ts.
+  template text not null default 'aurora',
+
   published boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -42,6 +46,11 @@ create table if not exists public.profiles (
 alter table public.profiles add column if not exists typewriter_phrases text[] not null default '{}';
 alter table public.profiles add column if not exists resume_url text;
 alter table public.profiles add column if not exists skill_groups jsonb not null default '[]';
+alter table public.profiles add column if not exists template text not null default 'aurora';
+
+alter table public.profiles drop constraint if exists profiles_template_check;
+alter table public.profiles add constraint profiles_template_check
+  check (template in ('aurora', 'nova'));
 
 -- Keep updated_at current on every change.
 create or replace function public.set_updated_at()
@@ -215,3 +224,22 @@ create policy "Users can delete their own certificate images"
     bucket_id = 'certificates'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
+
+-- 7. Admins — a short allowlist of user ids with full access to every
+-- profile via the admin dashboard. RLS is enabled with NO policies at all,
+-- so this table is completely unreadable/unwritable through the anon or
+-- authenticated roles — only the service role (used server-side in
+-- src/lib/supabase/admin.ts) can ever touch it. Nobody can grant themselves
+-- admin access through the app; it's added by hand below.
+create table if not exists public.admins (
+  id uuid references auth.users on delete cascade primary key,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admins enable row level security;
+
+-- To grant yourself admin access, run this once with your own email:
+--
+-- insert into public.admins (id)
+-- select id from auth.users where email = 'you@example.com'
+-- on conflict (id) do nothing;
