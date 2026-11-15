@@ -3,7 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Refreshes the Supabase auth session on every request and protects
- * /dashboard routes by redirecting signed-out users to /login.
+ * /dashboard and /admin routes by redirecting signed-out users to their
+ * respective login pages. This only checks for *any* signed-in session —
+ * whether that session actually has admin access is re-checked server-side
+ * on every /admin page and action via getAdminUser(), which is the real
+ * authorization boundary.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -45,6 +49,16 @@ export async function updateSession(request: NextRequest) {
   if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    !user &&
+    request.nextUrl.pathname.startsWith("/admin") &&
+    request.nextUrl.pathname !== "/admin/login"
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/login";
     return NextResponse.redirect(url);
   }
 

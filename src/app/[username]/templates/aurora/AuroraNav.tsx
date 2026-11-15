@@ -12,7 +12,7 @@ const LINKS = [
   { href: "#contact", label: "Contact" },
 ];
 
-export default function Nav({
+export default function AuroraNav({
   fullName,
   pronouns,
   contactEmail,

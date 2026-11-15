@@ -56,7 +56,7 @@ function scrollToShowcase() {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-export default function Showcase({
+export default function AuroraShowcase({
   experience,
   projects,
   education,
@@ -206,7 +206,6 @@ export default function Showcase({
                   alt={item.title}
                   width={640}
                   height={280}
-                  unoptimized
                   className="h-44 w-full rounded-t-xl object-cover"
                 />
               )}
@@ -269,7 +268,6 @@ export default function Showcase({
                     alt={item.name}
                     width={640}
                     height={280}
-                    unoptimized
                     className="h-40 w-full rounded-t-xl object-cover transition hover:opacity-90"
                   />
                 </button>
@@ -376,7 +374,6 @@ export default function Showcase({
             alt={lightbox.alt}
             width={1000}
             height={700}
-            unoptimized
             onClick={(e) => e.stopPropagation()}
             className="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
           />

@@ -21,7 +21,11 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .maybeSingle<Profile>();
 
-  const profile = profileRow ? normalizeProfile(profileRow) : null;
+  if (!profileRow) {
+    redirect("/onboarding");
+  }
+
+  const profile = normalizeProfile(profileRow);
 
   const { data: messages } = await supabase
     .from("messages")
@@ -38,7 +42,13 @@ export default async function DashboardPage() {
           <p className="text-xs text-violet-300">{user.email}</p>
         </div>
         <div className="flex items-center gap-3">
-          {profile?.username && (
+          <a
+            href="#template"
+            className="hidden rounded-lg border border-white/20 px-3 py-1.5 text-sm capitalize text-white hover:bg-white/10 sm:inline-block"
+          >
+            {profile.template} template
+          </a>
+          {profile.username && (
             <a
               href={`/${profile.username}`}
               target="_blank"
@@ -66,7 +76,7 @@ export default async function DashboardPage() {
           soon as you save.
         </p>
 
-        <ProfileForm profile={profile ?? null} email={user.email ?? ""} />
+        <ProfileForm profile={profile} email={user.email ?? ""} />
 
         <MessagesInbox messages={messages ?? []} />
       </div>
