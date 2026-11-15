@@ -1,9 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createPublicClient } from "@/lib/supabase/public";
-
-function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-}
+import { getBaseUrl } from "@/lib/site";
 
 async function getProfileUrls(baseUrl: string): Promise<MetadataRoute.Sitemap> {
   // Supabase env vars aren't needed to serve the rest of the sitemap, so a
